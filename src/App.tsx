@@ -11,6 +11,8 @@ import Members from "./pages/Members";
 import Donations from "./pages/Donations";
 import Events from "./pages/Events";
 import Announcements from "./pages/Announcements";
+import Messages from "./pages/Messages";
+import MakeDonation from "./pages/MakeDonation";
 import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
 
@@ -27,12 +29,14 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/members" element={<Members />} />
-            <Route path="/donations" element={<Donations />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/announcements" element={<Announcements />} />
-            <Route path="/chatbot" element={<Chatbot />} />
-            <Route path="*" element={<NotFound />} />
+          <Route path="/members" element={<Members />} />
+          <Route path="/donations" element={<Donations />} />
+          <Route path="/make-donation" element={<MakeDonation />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

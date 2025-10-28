@@ -406,6 +406,30 @@ export type Database = {
           },
         ]
       }
+      eglise_group_messages: {
+        Row: {
+          church_id: string
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       eglise_knowledge_base: {
         Row: {
           content: string
@@ -485,6 +509,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      eglise_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
       }
       "eglise_OLCAP-CI_message": {
         Row: {
