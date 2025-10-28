@@ -194,13 +194,43 @@ export default function Members() {
                   <CardTitle className="text-lg">{member.full_name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-muted-foreground">{member.phone}</p>
-                    {member.email && <p className="text-muted-foreground">{member.email}</p>}
-                    {member.address && <p className="text-muted-foreground">{member.address}</p>}
-                    <p className="text-xs text-muted-foreground mt-2">
+                  <div className="space-y-3 text-sm">
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">{member.phone}</p>
+                      {member.email && <p className="text-muted-foreground">{member.email}</p>}
+                      {member.address && <p className="text-muted-foreground">{member.address}</p>}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
                       Statut: <span className="font-medium">{member.membership_status}</span>
                     </p>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => window.open(`tel:${member.phone}`)}
+                      >
+                        Appeler
+                      </Button>
+                      {member.email && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => window.open(`mailto:${member.email}`)}
+                        >
+                          Email
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => window.open(`https://wa.me/${member.phone.replace(/\D/g, '')}`)}
+                      >
+                        WhatsApp
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
