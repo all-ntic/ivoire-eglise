@@ -19,7 +19,7 @@ export default function Donations() {
   const loadDonations = async () => {
     try {
       const { data, error } = await supabase
-        .from("church_donations")
+        .from("eglise_church_donations")
         .select("*")
         .order("created_at", { ascending: false });
 

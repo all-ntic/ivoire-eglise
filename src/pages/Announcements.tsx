@@ -50,7 +50,7 @@ export default function Announcements() {
     if (!user) return;
 
     const { data } = await supabase
-      .from("user_roles")
+      .from("eglise_user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin")
@@ -62,10 +62,10 @@ export default function Announcements() {
   const loadAnnouncements = async () => {
     try {
       const { data, error } = await supabase
-        .from("announcements")
+        .from("eglise_announcements")
         .select(`
           *,
-          profiles:author_id (
+          eglise_profiles:author_id (
             full_name
           )
         `)
@@ -91,7 +91,7 @@ export default function Announcements() {
       if (!user) throw new Error("Non authentifié");
 
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("eglise_profiles")
         .select("church_id")
         .eq("id", user.id)
         .single();
@@ -105,7 +105,7 @@ export default function Announcements() {
         return;
       }
 
-      const { error } = await supabase.from("announcements").insert({
+      const { error } = await supabase.from("eglise_announcements").insert({
         ...newAnnouncement,
         church_id: profile.church_id,
         author_id: user.id,
@@ -259,7 +259,7 @@ export default function Announcements() {
                           <div>
                             <CardTitle className="text-lg">{announcement.title}</CardTitle>
                             <CardDescription className="text-xs mt-1">
-                              Par {announcement.profiles?.full_name || "Pasteur"} •{" "}
+                              Par {announcement.eglise_profiles?.full_name || "Pasteur"} •{" "}
                               {format(new Date(announcement.created_at), "d MMMM yyyy 'à' HH:mm", {
                                 locale: fr,
                               })}

@@ -47,13 +47,13 @@ export default function Auth() {
   const loadChurches = async () => {
     try {
       const { data: churchesData, error } = await supabase
-        .from("churches")
+        .from("eglise_churches")
         .select(`
           id,
           name,
-          profiles!inner(full_name, user_roles!inner(role))
+          eglise_profiles!inner(full_name, eglise_user_roles!inner(role))
         `)
-        .eq("profiles.user_roles.role", "admin");
+        .eq("eglise_profiles.eglise_user_roles.role", "admin");
 
       if (error) throw error;
 
@@ -113,7 +113,7 @@ export default function Auth() {
           if (userType === "pastor") {
             const slug = churchName.toLowerCase().replace(/\s+/g, "-");
             const { data: newChurch, error: churchError } = await supabase
-              .from("churches")
+              .from("eglise_churches")
               .insert({ name: churchName, slug })
               .select()
               .single();
@@ -122,7 +122,7 @@ export default function Auth() {
 
             // Update profile with church_id
             const { error: profileError } = await supabase
-              .from("profiles")
+              .from("eglise_profiles")
               .update({ church_id: newChurch.id })
               .eq("id", authData.user.id);
 
@@ -130,14 +130,14 @@ export default function Auth() {
 
             // Assign admin role
             const { error: roleError } = await supabase
-              .from("user_roles")
+              .from("eglise_user_roles")
               .insert({ user_id: authData.user.id, role: "admin" });
 
             if (roleError) throw roleError;
           } else {
             // If member, just update profile with selected church
             const { error: profileError } = await supabase
-              .from("profiles")
+              .from("eglise_profiles")
               .update({ church_id: selectedChurchId })
               .eq("id", authData.user.id);
 
@@ -145,7 +145,7 @@ export default function Auth() {
 
             // Assign user role
             const { error: roleError } = await supabase
-              .from("user_roles")
+              .from("eglise_user_roles")
               .insert({ user_id: authData.user.id, role: "user" });
 
             if (roleError) throw roleError;

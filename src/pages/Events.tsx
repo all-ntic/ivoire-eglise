@@ -21,7 +21,7 @@ export default function Events() {
   const loadEvents = async () => {
     try {
       const { data, error } = await supabase
-        .from("events")
+        .from("eglise_events")
         .select("*")
         .order("start_date", { ascending: true });
 

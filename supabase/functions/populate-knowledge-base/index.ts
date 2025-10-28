@@ -69,7 +69,7 @@ serve(async (req) => {
 
     // Check if knowledge base is already populated
     const { count } = await supabase
-      .from('knowledge_base')
+      .from('eglise_knowledge_base')
       .select('*', { count: 'exact', head: true });
 
     if (count && count > 0) {
@@ -81,7 +81,7 @@ serve(async (req) => {
 
     // Insert all entries
     const { data, error } = await supabase
-      .from('knowledge_base')
+      .from('eglise_knowledge_base')
       .insert(knowledgeEntries)
       .select();
 

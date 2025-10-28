@@ -42,7 +42,7 @@ export default function Dashboard() {
   const loadProfile = async () => {
     if (!user) return;
     const { data } = await supabase
-      .from("profiles")
+      .from("eglise_profiles")
       .select("*")
       .eq("id", user.id)
       .single();

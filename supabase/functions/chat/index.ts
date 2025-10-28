@@ -31,7 +31,7 @@ serve(async (req) => {
     // Rate limiting
     const identifier = sessionId || req.headers.get("x-forwarded-for") || "anonymous";
     const { data: rateLimitData } = await supabaseClient
-      .from("chatbot_rate_limits")
+      .from("eglise_chatbot_rate_limits")
       .select("*")
       .eq("identifier", identifier)
       .gte("window_start", new Date(Date.now() - 60000).toISOString())
@@ -46,12 +46,12 @@ serve(async (req) => {
 
     if (rateLimitData) {
       await supabaseClient
-        .from("chatbot_rate_limits")
+        .from("eglise_chatbot_rate_limits")
         .update({ request_count: rateLimitData.request_count + 1 })
         .eq("id", rateLimitData.id);
     } else {
       await supabaseClient
-        .from("chatbot_rate_limits")
+        .from("eglise_chatbot_rate_limits")
         .insert({ identifier, request_count: 1, window_start: new Date().toISOString() });
     }
 
@@ -60,7 +60,7 @@ serve(async (req) => {
     
     if (!currentConversationId) {
       const { data: newConv, error: convError } = await supabaseClient
-        .from("chat_conversations")
+        .from("eglise_chat_conversations")
         .insert({ session_id: sessionId || identifier })
         .select()
         .single();
@@ -71,7 +71,7 @@ serve(async (req) => {
 
     // Save user message
     await supabaseClient
-      .from("chat_messages")
+      .from("eglise_chat_messages")
       .insert({
         conversation_id: currentConversationId,
         role: "user",
@@ -80,14 +80,14 @@ serve(async (req) => {
 
     // Get conversation history
     const { data: messages } = await supabaseClient
-      .from("chat_messages")
+      .from("eglise_chat_messages")
       .select("*")
       .eq("conversation_id", currentConversationId)
       .order("created_at", { ascending: true });
 
     // Search knowledge base
     const { data: knowledgeData } = await supabaseClient
-      .from("knowledge_base")
+      .from("eglise_knowledge_base")
       .select("*")
       .textSearch("content", message, { type: "websearch", config: "french" })
       .limit(5);
@@ -134,7 +134,7 @@ Utilise le contexte biblique fourni pour enrichir tes réponses.${contextPrompt}
 
     // Save AI response
     await supabaseClient
-      .from("chat_messages")
+      .from("eglise_chat_messages")
       .insert({
         conversation_id: currentConversationId,
         role: "assistant",

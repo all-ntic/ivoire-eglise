@@ -14,7 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      announcements: {
+      eglise_announcements: {
         Row: {
           announcement_type: string
           author_id: string
@@ -47,7 +47,7 @@ export type Database = {
         }
         Relationships: []
       }
-      chat_conversations: {
+      eglise_chat_conversations: {
         Row: {
           created_at: string
           id: string
@@ -68,7 +68,7 @@ export type Database = {
         }
         Relationships: []
       }
-      chat_messages: {
+      eglise_chat_messages: {
         Row: {
           content: string
           conversation_id: string
@@ -95,12 +95,12 @@ export type Database = {
             foreignKeyName: "chat_messages_conversation_id_fkey"
             columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: "chat_conversations"
+            referencedRelation: "eglise_chat_conversations"
             referencedColumns: ["id"]
           },
         ]
       }
-      chatbot_rate_limits: {
+      eglise_chatbot_rate_limits: {
         Row: {
           created_at: string
           id: string
@@ -124,7 +124,7 @@ export type Database = {
         }
         Relationships: []
       }
-      church_donations: {
+      eglise_church_donations: {
         Row: {
           amount: number
           church_id: string
@@ -178,12 +178,12 @@ export type Database = {
             foreignKeyName: "church_donations_church_id_fkey"
             columns: ["church_id"]
             isOneToOne: false
-            referencedRelation: "churches"
+            referencedRelation: "eglise_churches"
             referencedColumns: ["id"]
           },
         ]
       }
-      churches: {
+      eglise_churches: {
         Row: {
           address: string | null
           created_at: string
@@ -222,7 +222,7 @@ export type Database = {
         }
         Relationships: []
       }
-      contact_messages: {
+      eglise_contact_messages: {
         Row: {
           appointment_date: string | null
           company: string | null
@@ -267,7 +267,7 @@ export type Database = {
         }
         Relationships: []
       }
-      donations: {
+      eglise_donations: {
         Row: {
           amount: number
           campaign: string | null
@@ -318,7 +318,7 @@ export type Database = {
         }
         Relationships: []
       }
-      event_participants: {
+      eglise_event_participants: {
         Row: {
           attendance_status: string | null
           event_id: string
@@ -351,12 +351,12 @@ export type Database = {
             foreignKeyName: "event_participants_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "events"
+            referencedRelation: "eglise_events"
             referencedColumns: ["id"]
           },
         ]
       }
-      events: {
+      eglise_events: {
         Row: {
           church_id: string
           created_at: string
@@ -401,12 +401,12 @@ export type Database = {
             foreignKeyName: "events_church_id_fkey"
             columns: ["church_id"]
             isOneToOne: false
-            referencedRelation: "churches"
+            referencedRelation: "eglise_churches"
             referencedColumns: ["id"]
           },
         ]
       }
-      knowledge_base: {
+      eglise_knowledge_base: {
         Row: {
           content: string
           created_at: string
@@ -433,7 +433,7 @@ export type Database = {
         }
         Relationships: []
       }
-      members: {
+      eglise_members: {
         Row: {
           address: string | null
           baptism_date: string | null
@@ -481,12 +481,12 @@ export type Database = {
             foreignKeyName: "members_church_id_fkey"
             columns: ["church_id"]
             isOneToOne: false
-            referencedRelation: "churches"
+            referencedRelation: "eglise_churches"
             referencedColumns: ["id"]
           },
         ]
       }
-      "OLCAP-CI_message": {
+      "eglise_OLCAP-CI_message": {
         Row: {
           appointment_date: string | null
           company: string | null
@@ -531,7 +531,7 @@ export type Database = {
         }
         Relationships: []
       }
-      participants_secure: {
+      eglise_participants_secure: {
         Row: {
           created_at: string | null
           email: string
@@ -555,7 +555,7 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
+      eglise_profiles: {
         Row: {
           avatar_url: string | null
           church_id: string | null
@@ -588,12 +588,12 @@ export type Database = {
             foreignKeyName: "profiles_church_id_fkey"
             columns: ["church_id"]
             isOneToOne: false
-            referencedRelation: "churches"
+            referencedRelation: "eglise_churches"
             referencedColumns: ["id"]
           },
         ]
       }
-      tradlog_contacts: {
+      eglise_tradlog_contacts: {
         Row: {
           company: string | null
           created_at: string
@@ -629,7 +629,7 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
+      eglise_user_roles: {
         Row: {
           created_at: string
           id: string

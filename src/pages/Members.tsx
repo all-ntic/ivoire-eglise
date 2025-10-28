@@ -36,7 +36,7 @@ export default function Members() {
   const loadMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from("members")
+        .from("eglise_members")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -57,7 +57,7 @@ export default function Members() {
     e.preventDefault();
     try {
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("eglise_profiles")
         .select("church_id")
         .single();
 
@@ -70,7 +70,7 @@ export default function Members() {
         return;
       }
 
-      const { error } = await supabase.from("members").insert({
+      const { error } = await supabase.from("eglise_members").insert({
         ...newMember,
         church_id: profile.church_id,
       });
