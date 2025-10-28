@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chatbot_rate_limits: {
         Row: {
           created_at: string
@@ -35,6 +88,104 @@ export type Database = {
           identifier?: string
           request_count?: number
           window_start?: string
+        }
+        Relationships: []
+      }
+      church_donations: {
+        Row: {
+          amount: number
+          church_id: string
+          created_at: string
+          currency: string | null
+          donation_type: string | null
+          donor_email: string | null
+          donor_name: string
+          donor_phone: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          church_id: string
+          created_at?: string
+          currency?: string | null
+          donation_type?: string | null
+          donor_email?: string | null
+          donor_name: string
+          donor_phone?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          church_id?: string
+          created_at?: string
+          currency?: string | null
+          donation_type?: string | null
+          donor_email?: string | null
+          donor_name?: string
+          donor_phone?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_donations_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      churches: {
+        Row: {
+          address: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -134,6 +285,174 @@ export type Database = {
         }
         Relationships: []
       }
+      event_participants: {
+        Row: {
+          attendance_status: string | null
+          event_id: string
+          id: string
+          participant_email: string | null
+          participant_name: string
+          participant_phone: string
+          registration_date: string
+        }
+        Insert: {
+          attendance_status?: string | null
+          event_id: string
+          id?: string
+          participant_email?: string | null
+          participant_name: string
+          participant_phone: string
+          registration_date?: string
+        }
+        Update: {
+          attendance_status?: string | null
+          event_id?: string
+          id?: string
+          participant_email?: string | null
+          participant_name?: string
+          participant_phone?: string
+          registration_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          church_id: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          event_type: string | null
+          id: string
+          location: string | null
+          max_participants: number | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          max_participants?: number | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          max_participants?: number | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_base: {
+        Row: {
+          content: string
+          created_at: string
+          entry_type: string
+          id: string
+          tags: string[] | null
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          entry_type: string
+          id?: string
+          tags?: string[] | null
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          tags?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          address: string | null
+          baptism_date: string | null
+          birth_date: string | null
+          church_id: string
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          membership_status: string | null
+          notes: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          baptism_date?: string | null
+          birth_date?: string | null
+          church_id: string
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          membership_status?: string | null
+          notes?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          baptism_date?: string | null
+          birth_date?: string | null
+          church_id?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          membership_status?: string | null
+          notes?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       "OLCAP-CI_message": {
         Row: {
           appointment_date: string | null
@@ -203,6 +522,44 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          church_id: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          church_id?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          church_id?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tradlog_contacts: {
         Row: {
           company: string | null
@@ -266,6 +623,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      get_user_church: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
