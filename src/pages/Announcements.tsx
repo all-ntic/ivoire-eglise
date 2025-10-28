@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Plus, Bell, Book, Info, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Plus, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -23,30 +23,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 export default function Announcements() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: "",
     content: "",
     announcement_type: "information",
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    checkAdminStatus();
     loadAnnouncements();
   }, []);
+
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+
+    setIsAdmin(!!data);
+  };
 
   const loadAnnouncements = async () => {
     try {
       const { data, error } = await supabase
         .from("announcements")
-        .select("*, profiles(full_name)")
+        .select(`
+          *,
+          profiles:author_id (
+            full_name
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -65,9 +87,13 @@ export default function Announcements() {
   const handleAddAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non authentifié");
+
       const { data: profile } = await supabase
         .from("profiles")
-        .select("church_id, id")
+        .select("church_id")
+        .eq("id", user.id)
         .single();
 
       if (!profile?.church_id) {
@@ -82,14 +108,14 @@ export default function Announcements() {
       const { error } = await supabase.from("announcements").insert({
         ...newAnnouncement,
         church_id: profile.church_id,
-        author_id: profile.id,
+        author_id: user.id,
       });
 
       if (error) throw error;
 
       toast({ title: "Annonce publiée avec succès !" });
       setNewAnnouncement({ title: "", content: "", announcement_type: "information" });
-      setOpen(false);
+      setDialogOpen(false);
       loadAnnouncements();
     } catch (error: any) {
       toast({
@@ -102,28 +128,25 @@ export default function Announcements() {
 
   const getAnnouncementIcon = (type: string) => {
     switch (type) {
-      case "prière":
-        return <Bell className="h-5 w-5 text-primary" />;
-      case "prédication":
-        return <Book className="h-5 w-5 text-primary" />;
-      case "programme":
-        return <CalendarIcon className="h-5 w-5 text-primary" />;
-      default:
-        return <Info className="h-5 w-5 text-primary" />;
+      case "priere": return "🙏";
+      case "predication": return "📖";
+      case "programme": return "📅";
+      default: return "ℹ️";
     }
   };
 
-  const getAnnouncementBadgeColor = (type: string) => {
+  const getAnnouncementColor = (type: string) => {
     switch (type) {
-      case "prière":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "prédication":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "programme":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+      case "priere": return "border-l-4 border-l-blue-500";
+      case "predication": return "border-l-4 border-l-purple-500";
+      case "programme": return "border-l-4 border-l-green-500";
+      default: return "border-l-4 border-l-gray-500";
     }
+  };
+
+  const filterByType = (type: string) => {
+    if (type === "all") return announcements;
+    return announcements.filter(a => a.announcement_type === type);
   };
 
   return (
@@ -135,125 +158,125 @@ export default function Announcements() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
-            <h1 className="text-2xl font-bold">Annonces de l'Église</h1>
+            <h1 className="text-2xl font-bold">Communications de l'Église</h1>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle annonce
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Publier une nouvelle annonce</DialogTitle>
-                <DialogDescription>
-                  Partagez des prières, informations, prédications ou programmes avec vos fidèles
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleAddAnnouncement} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="type">Type d'annonce *</Label>
-                  <Select
-                    value={newAnnouncement.announcement_type}
-                    onValueChange={(value) =>
-                      setNewAnnouncement({ ...newAnnouncement, announcement_type: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="information">Information</SelectItem>
-                      <SelectItem value="prière">Prière</SelectItem>
-                      <SelectItem value="prédication">Prédication</SelectItem>
-                      <SelectItem value="programme">Programme de messe</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="title">Titre *</Label>
-                  <Input
-                    id="title"
-                    value={newAnnouncement.title}
-                    onChange={(e) =>
-                      setNewAnnouncement({ ...newAnnouncement, title: e.target.value })
-                    }
-                    placeholder="Ex: Messe dominicale, Chaîne de prière..."
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="content">Contenu *</Label>
-                  <Textarea
-                    id="content"
-                    value={newAnnouncement.content}
-                    onChange={(e) =>
-                      setNewAnnouncement({ ...newAnnouncement, content: e.target.value })
-                    }
-                    placeholder="Décrivez votre annonce en détail..."
-                    className="min-h-[150px]"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full">
-                  Publier l'annonce
+          {isAdmin && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvelle annonce
                 </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Publier une annonce</DialogTitle>
+                  <DialogDescription>
+                    Partagez des prières, informations, prédications ou programmes
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddAnnouncement} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Type d'annonce *</Label>
+                    <Select
+                      value={newAnnouncement.announcement_type}
+                      onValueChange={(value) =>
+                        setNewAnnouncement({ ...newAnnouncement, announcement_type: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="information">Information</SelectItem>
+                        <SelectItem value="priere">Prière</SelectItem>
+                        <SelectItem value="predication">Prédication</SelectItem>
+                        <SelectItem value="programme">Programme de messe</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Titre *</Label>
+                    <Input
+                      id="title"
+                      value={newAnnouncement.title}
+                      onChange={(e) =>
+                        setNewAnnouncement({ ...newAnnouncement, title: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Contenu *</Label>
+                    <Textarea
+                      id="content"
+                      value={newAnnouncement.content}
+                      onChange={(e) =>
+                        setNewAnnouncement({ ...newAnnouncement, content: e.target.value })
+                      }
+                      rows={6}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    <Send className="h-4 w-4 mr-2" />
+                    Publier
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {loading ? (
-          <div className="text-center py-8">Chargement...</div>
-        ) : announcements.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground mb-4">Aucune annonce publiée</p>
-              <p className="text-sm text-muted-foreground">
-                Commencez à partager des prières, informations et programmes avec vos fidèles
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {announcements.map((announcement) => (
-              <Card key={announcement.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {getAnnouncementIcon(announcement.announcement_type)}
-                      <div>
-                        <CardTitle className="text-xl">{announcement.title}</CardTitle>
-                        <CardDescription className="mt-1">
-                          Par {announcement.profiles?.full_name || "Pasteur"} •{" "}
-                          {format(new Date(announcement.created_at), "d MMMM yyyy 'à' HH:mm", {
-                            locale: fr,
-                          })}
-                        </CardDescription>
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="all">Tout</TabsTrigger>
+            <TabsTrigger value="information">Infos</TabsTrigger>
+            <TabsTrigger value="priere">Prières</TabsTrigger>
+            <TabsTrigger value="predication">Prédications</TabsTrigger>
+            <TabsTrigger value="programme">Programmes</TabsTrigger>
+          </TabsList>
+
+          {["all", "information", "priere", "predication", "programme"].map((type) => (
+            <TabsContent key={type} value={type} className="space-y-4 mt-6">
+              {loading ? (
+                <div className="text-center py-8">Chargement...</div>
+              ) : filterByType(type).length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <p className="text-muted-foreground">Aucune annonce pour le moment</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filterByType(type).map((announcement) => (
+                  <Card key={announcement.id} className={getAnnouncementColor(announcement.announcement_type)}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{getAnnouncementIcon(announcement.announcement_type)}</span>
+                          <div>
+                            <CardTitle className="text-lg">{announcement.title}</CardTitle>
+                            <CardDescription className="text-xs mt-1">
+                              Par {announcement.profiles?.full_name || "Pasteur"} •{" "}
+                              {format(new Date(announcement.created_at), "d MMMM yyyy 'à' HH:mm", {
+                                locale: fr,
+                              })}
+                            </CardDescription>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getAnnouncementBadgeColor(
-                        announcement.announcement_type
-                      )}`}
-                    >
-                      {announcement.announcement_type}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                    {announcement.content}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm whitespace-pre-wrap">{announcement.content}</p>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
       </main>
     </div>
   );

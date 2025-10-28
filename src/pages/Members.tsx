@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { ArrowLeft, Plus, Search, Phone, Mail, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -210,6 +210,7 @@ export default function Members() {
                         className="flex-1"
                         onClick={() => window.open(`tel:${member.phone}`)}
                       >
+                        <Phone className="h-3 w-3 mr-1" />
                         Appeler
                       </Button>
                       {member.email && (
@@ -219,6 +220,7 @@ export default function Members() {
                           className="flex-1"
                           onClick={() => window.open(`mailto:${member.email}`)}
                         >
+                          <Mail className="h-3 w-3 mr-1" />
                           Email
                         </Button>
                       )}
@@ -228,6 +230,7 @@ export default function Members() {
                         className="flex-1"
                         onClick={() => window.open(`https://wa.me/${member.phone.replace(/\D/g, '')}`)}
                       >
+                        <MessageCircle className="h-3 w-3 mr-1" />
                         WhatsApp
                       </Button>
                     </div>

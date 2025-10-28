@@ -9,9 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import Members from "./pages/Members";
 import Donations from "./pages/Donations";
 import Events from "./pages/Events";
+import Announcements from "./pages/Announcements";
 import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
-import Announcements from "./pages/Announcements";
 
 const queryClient = new QueryClient();
 
@@ -27,10 +27,10 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/members" element={<Members />} />
           <Route path="/donations" element={<Donations />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/chatbot" element={<Chatbot />} />
-        <Route path="/announcements" element={<Announcements />} />
-        <Route path="*" element={<NotFound />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
