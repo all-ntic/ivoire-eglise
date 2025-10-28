@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Plus, Search, Phone, Mail, MessageCircle } from "lucide-react";
+import { ArrowLeft, Plus, Search, Phone, Mail, MessageCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -15,11 +15,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Members() {
   const [members, setMembers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<any>(null);
   const [newMember, setNewMember] = useState({
     full_name: "",
     email: "",
@@ -30,8 +43,25 @@ export default function Members() {
   const { toast } = useToast();
 
   useEffect(() => {
+    checkAdminStatus();
     loadMembers();
   }, []);
+
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: roles } = await supabase
+        .from("eglise_user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+
+      setIsAdmin(roles?.some(r => r.role === "admin") ?? false);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+    }
+  };
 
   const loadMembers = async () => {
     try {
@@ -79,6 +109,30 @@ export default function Members() {
 
       toast({ title: "Membre ajouté avec succès !" });
       setNewMember({ full_name: "", email: "", phone: "", address: "" });
+      loadMembers();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!memberToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("eglise_members")
+        .delete()
+        .eq("id", memberToDelete.id);
+
+      if (error) throw error;
+
+      toast({ title: "Membre supprimé avec succès" });
+      setDeleteDialogOpen(false);
+      setMemberToDelete(null);
       loadMembers();
     } catch (error: any) {
       toast({
@@ -234,12 +288,43 @@ export default function Members() {
                         WhatsApp
                       </Button>
                     </div>
+                    {isAdmin && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="w-full mt-2"
+                        onClick={() => {
+                          setMemberToDelete(member);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Supprimer
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer ce membre ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Êtes-vous sûr de vouloir supprimer {memberToDelete?.full_name} ? Cette action est irréversible.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteMember} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
