@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MessageSquare } from "lucide-react";
+import { ArrowLeft, Send, MessageSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -17,11 +17,13 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Bienvenue ! Je suis votre conseiller spirituel basé sur la Bible. Comment puis-je vous aider aujourd'hui ?",
+      content: "Bienvenue ! Je suis votre assistant spirituel IA. Posez-moi vos questions bibliques, demandez des prières ou des conseils spirituels. 🙏",
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [sessionId] = useState(() => crypto.randomUUID());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,71 +32,39 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const searchKnowledgeBase = async (query: string) => {
-    const { data, error } = await supabase
-      .from("knowledge_base")
-      .select("*")
-      .limit(5);
-
-    if (error) {
-      console.error("Error fetching knowledge base:", error);
-      return [];
-    }
-
-    // Simple keyword matching
-    const keywords = query.toLowerCase().split(" ");
-    const scored = data.map((entry) => {
-      const contentLower = (entry.title + " " + entry.content + " " + entry.tags.join(" ")).toLowerCase();
-      const score = keywords.reduce((acc, keyword) => {
-        return acc + (contentLower.includes(keyword) ? 1 : 0);
-      }, 0);
-      return { ...entry, score };
-    });
-
-    return scored
-      .filter((entry) => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3);
-  };
-
-  const generateResponse = (query: string, relevantEntries: any[]) => {
-    if (relevantEntries.length === 0) {
-      return "Je suis désolé, je n'ai pas trouvé d'information pertinente dans ma base de connaissances bibliques. Pourriez-vous reformuler votre question ?";
-    }
-
-    let response = "Voici ce que j'ai trouvé :\n\n";
-    relevantEntries.forEach((entry, index) => {
-      response += `${index + 1}. **${entry.title}**\n${entry.content}\n\n`;
-    });
-
-    return response;
-  };
-
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
-    const userMessage: Message = { role: "user", content: input };
+    const userMessage: Message = { role: "user", content: input.trim() };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
     try {
-      // Search knowledge base
-      const relevantEntries = await searchKnowledgeBase(input);
-      
-      // Generate response
-      const response = generateResponse(input, relevantEntries);
-      
+      const { data, error } = await supabase.functions.invoke("chat", {
+        body: {
+          message: userMessage.content,
+          conversationId,
+          sessionId,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.conversationId && !conversationId) {
+        setConversationId(data.conversationId);
+      }
+
       const assistantMessage: Message = {
         role: "assistant",
-        content: response,
+        content: data.message,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors du traitement de votre message.",
+        description: error.message || "Une erreur est survenue lors du traitement de votre message.",
         variant: "destructive",
       });
     } finally {
@@ -145,7 +115,8 @@ export default function Chatbot() {
                 ))}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg px-4 py-2">
+                    <div className="bg-muted rounded-lg px-4 py-2 flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       <p className="text-sm">En train de réfléchir...</p>
                     </div>
                   </div>
@@ -158,12 +129,12 @@ export default function Chatbot() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder="Posez votre question..."
                 disabled={loading}
               />
               <Button onClick={handleSend} disabled={loading || !input.trim()}>
-                <Send className="h-4 w-4" />
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </div>
           </CardContent>
