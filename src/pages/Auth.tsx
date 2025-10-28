@@ -14,6 +14,10 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [userType, setUserType] = useState<"pastor" | "member">("member");
+  const [churchName, setChurchName] = useState("");
+  const [selectedChurchId, setSelectedChurchId] = useState("");
+  const [churches, setChurches] = useState<Array<{ id: string; name: string; pastor_name: string }>>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -34,6 +38,37 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  useEffect(() => {
+    if (!isLogin && userType === "member") {
+      loadChurches();
+    }
+  }, [isLogin, userType]);
+
+  const loadChurches = async () => {
+    try {
+      const { data: churchesData, error } = await supabase
+        .from("churches")
+        .select(`
+          id,
+          name,
+          profiles!inner(full_name, user_roles!inner(role))
+        `)
+        .eq("profiles.user_roles.role", "admin");
+
+      if (error) throw error;
+
+      const churchesWithPastors = churchesData?.map((church: any) => ({
+        id: church.id,
+        name: church.name,
+        pastor_name: church.profiles?.[0]?.full_name || "Pasteur non défini",
+      })) || [];
+
+      setChurches(churchesWithPastors);
+    } catch (error) {
+      console.error("Error loading churches:", error);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -47,7 +82,16 @@ export default function Auth() {
         if (error) throw error;
         toast({ title: "Connexion réussie !" });
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Validation
+        if (userType === "pastor" && !churchName.trim()) {
+          throw new Error("Veuillez entrer le nom de votre église");
+        }
+        if (userType === "member" && !selectedChurchId) {
+          throw new Error("Veuillez sélectionner une église");
+        }
+
+        // Sign up user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -55,10 +99,59 @@ export default function Auth() {
             data: {
               full_name: fullName,
               phone,
+              user_type: userType,
+              church_name: userType === "pastor" ? churchName : undefined,
+              church_id: userType === "member" ? selectedChurchId : undefined,
             },
           },
         });
-        if (error) throw error;
+        
+        if (authError) throw authError;
+
+        if (authData.user) {
+          // If pastor, create church and assign admin role
+          if (userType === "pastor") {
+            const slug = churchName.toLowerCase().replace(/\s+/g, "-");
+            const { data: newChurch, error: churchError } = await supabase
+              .from("churches")
+              .insert({ name: churchName, slug })
+              .select()
+              .single();
+
+            if (churchError) throw churchError;
+
+            // Update profile with church_id
+            const { error: profileError } = await supabase
+              .from("profiles")
+              .update({ church_id: newChurch.id })
+              .eq("id", authData.user.id);
+
+            if (profileError) throw profileError;
+
+            // Assign admin role
+            const { error: roleError } = await supabase
+              .from("user_roles")
+              .insert({ user_id: authData.user.id, role: "admin" });
+
+            if (roleError) throw roleError;
+          } else {
+            // If member, just update profile with selected church
+            const { error: profileError } = await supabase
+              .from("profiles")
+              .update({ church_id: selectedChurchId })
+              .eq("id", authData.user.id);
+
+            if (profileError) throw profileError;
+
+            // Assign user role
+            const { error: roleError } = await supabase
+              .from("user_roles")
+              .insert({ user_id: authData.user.id, role: "user" });
+
+            if (roleError) throw roleError;
+          }
+        }
+
         toast({
           title: "Inscription réussie !",
           description: "Vérifiez votre email pour confirmer votre compte.",
@@ -111,6 +204,64 @@ export default function Auth() {
                     placeholder="+225 XX XX XX XX XX"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Vous êtes</Label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="userType"
+                        value="member"
+                        checked={userType === "member"}
+                        onChange={(e) => setUserType(e.target.value as "pastor" | "member")}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span>Fidèle</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="userType"
+                        value="pastor"
+                        checked={userType === "pastor"}
+                        onChange={(e) => setUserType(e.target.value as "pastor" | "member")}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span>Pasteur</span>
+                    </label>
+                  </div>
+                </div>
+                {userType === "pastor" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="churchName">Nom de votre église</Label>
+                    <Input
+                      id="churchName"
+                      type="text"
+                      value={churchName}
+                      onChange={(e) => setChurchName(e.target.value)}
+                      placeholder="Ex: Église Baptiste de la Grâce"
+                      required={!isLogin && userType === "pastor"}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="church">Choisissez votre église</Label>
+                    <select
+                      id="church"
+                      value={selectedChurchId}
+                      onChange={(e) => setSelectedChurchId(e.target.value)}
+                      required={!isLogin && userType === "member"}
+                      className="w-full px-3 py-2 border rounded-md bg-background"
+                    >
+                      <option value="">Sélectionnez une église</option>
+                      {churches.map((church) => (
+                        <option key={church.id} value={church.id}>
+                          {church.name} - Pasteur {church.pastor_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </>
             )}
             <div className="space-y-2">
