@@ -62,22 +62,33 @@ export default function Auth() {
 
   const loadChurches = async () => {
     try {
+      // First get all churches with their profiles
       const { data: churchesData, error } = await supabase
         .from("eglise_churches")
         .select(`
           id,
           name,
-          eglise_profiles!inner(full_name, eglise_user_roles!inner(role))
-        `)
-        .eq("eglise_profiles.eglise_user_roles.role", "admin");
+          eglise_profiles(id, full_name)
+        `);
 
       if (error) throw error;
 
-      const churchesWithPastors = churchesData?.map((church: any) => ({
-        id: church.id,
-        name: church.name,
-        pastor_name: church.profiles?.[0]?.full_name || "Pasteur non défini",
-      })) || [];
+      // Then get admin users
+      const { data: adminRoles } = await supabase
+        .from("eglise_user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      const adminUserIds = new Set(adminRoles?.map(r => r.user_id) || []);
+
+      const churchesWithPastors = churchesData?.map((church: any) => {
+        const adminProfile = church.eglise_profiles?.find((p: any) => adminUserIds.has(p.id));
+        return {
+          id: church.id,
+          name: church.name,
+          pastor_name: adminProfile?.full_name || "Pasteur non défini",
+        };
+      }) || [];
 
       setChurches(churchesWithPastors);
     } catch (error) {
