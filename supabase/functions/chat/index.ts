@@ -149,9 +149,15 @@ Utilise le contexte biblique fourni pour enrichir tes réponses.${contextPrompt}
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Error:", error);
+    console.error("Chatbot error:", error);
+    
+    // Message générique pour l'utilisateur
+    const userMessage = error.message?.includes('rate limit') 
+      ? 'Limite de requêtes atteinte. Veuillez réessayer dans quelques minutes.'
+      : 'Une erreur est survenue. Veuillez réessayer.';
+    
     return new Response(
-      JSON.stringify({ error: error.message || "Une erreur est survenue" }),
+      JSON.stringify({ error: userMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

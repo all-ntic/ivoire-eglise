@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Church } from "lucide-react";
+import { z } from "zod";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,6 +22,21 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Validation schemas
+  const loginSchema = z.object({
+    email: z.string().email("Email invalide").max(255, "Email trop long"),
+    password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+  });
+
+  const signUpSchema = z.object({
+    email: z.string().email("Email invalide").max(255, "Email trop long"),
+    password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+    fullName: z.string().trim().min(1, "Le nom complet est requis").max(100, "Nom trop long"),
+    phone: z.string().regex(/^[\+]?[0-9]{8,15}$/, "Numéro de téléphone invalide (8-15 chiffres)"),
+    churchName: z.string().trim().min(1, "Le nom de l'église est requis").max(200, "Nom d'église trop long").optional(),
+    selectedChurchId: z.string().uuid("ID d'église invalide").optional(),
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -75,33 +91,46 @@ export default function Auth() {
 
     try {
       if (isLogin) {
+        // Validate login data
+        const validated = loginSchema.parse({ email, password });
+        
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validated.email,
+          password: validated.password,
         });
         if (error) throw error;
         toast({ title: "Connexion réussie !" });
       } else {
-        // Validation
-        if (userType === "pastor" && !churchName.trim()) {
+        // Validate signup data
+        const validated = signUpSchema.parse({
+          email,
+          password,
+          fullName,
+          phone,
+          churchName: userType === "pastor" ? churchName : undefined,
+          selectedChurchId: userType === "member" ? selectedChurchId : undefined,
+        });
+
+        // Additional validation
+        if (userType === "pastor" && !validated.churchName) {
           throw new Error("Veuillez entrer le nom de votre église");
         }
-        if (userType === "member" && !selectedChurchId) {
+        if (userType === "member" && !validated.selectedChurchId) {
           throw new Error("Veuillez sélectionner une église");
         }
 
         // Sign up user
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password,
+          email: validated.email,
+          password: validated.password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
             data: {
-              full_name: fullName,
-              phone,
+              full_name: validated.fullName,
+              phone: validated.phone,
               user_type: userType,
-              church_name: userType === "pastor" ? churchName : undefined,
-              church_id: userType === "member" ? selectedChurchId : undefined,
+              church_name: userType === "pastor" ? validated.churchName : undefined,
+              church_id: userType === "member" ? validated.selectedChurchId : undefined,
             },
           },
         });
@@ -110,11 +139,11 @@ export default function Auth() {
 
         if (authData.user) {
           // If pastor, create church and assign admin role
-          if (userType === "pastor") {
-            const slug = churchName.toLowerCase().replace(/\s+/g, "-");
+          if (userType === "pastor" && validated.churchName) {
+            const slug = validated.churchName.toLowerCase().replace(/\s+/g, "-");
             const { data: newChurch, error: churchError } = await supabase
               .from("eglise_churches")
-              .insert({ name: churchName, slug })
+              .insert({ name: validated.churchName, slug })
               .select()
               .single();
 
@@ -134,11 +163,11 @@ export default function Auth() {
               .insert({ user_id: authData.user.id, role: "admin" });
 
             if (roleError) throw roleError;
-          } else {
+          } else if (validated.selectedChurchId) {
             // If member, just update profile with selected church
             const { error: profileError } = await supabase
               .from("eglise_profiles")
-              .update({ church_id: selectedChurchId })
+              .update({ church_id: validated.selectedChurchId })
               .eq("id", authData.user.id);
 
             if (profileError) throw profileError;
@@ -158,11 +187,21 @@ export default function Auth() {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Handle Zod validation errors
+      if (error instanceof z.ZodError) {
+        const errorMessage = error.errors.map(e => e.message).join(", ");
+        toast({
+          title: "Erreur de validation",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }

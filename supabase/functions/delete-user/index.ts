@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     if (userId && userId !== user.id) {
       // Vérifier si l'utilisateur est admin
       const { data: roles, error: rolesError } = await supabaseClient
-        .from('user_roles')
+        .from('eglise_user_roles')
         .select('role')
         .eq('user_id', user.id)
         .single()
