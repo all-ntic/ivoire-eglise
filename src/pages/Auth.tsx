@@ -149,6 +149,28 @@ export default function Auth() {
         if (authError) throw authError;
 
         if (authData.user) {
+          // Wait for the trigger to create the profile
+          let profileExists = false;
+          let attempts = 0;
+          while (!profileExists && attempts < 10) {
+            const { data: profile } = await supabase
+              .from("eglise_profiles")
+              .select("id")
+              .eq("id", authData.user.id)
+              .maybeSingle();
+            
+            if (profile) {
+              profileExists = true;
+            } else {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              attempts++;
+            }
+          }
+
+          if (!profileExists) {
+            throw new Error("Erreur lors de la création du profil. Veuillez réessayer.");
+          }
+
           // If pastor, create church and assign admin role
           if (userType === "pastor" && validated.churchName) {
             const slug = validated.churchName.toLowerCase().replace(/\s+/g, "-");
