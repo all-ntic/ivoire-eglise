@@ -594,51 +594,6 @@ export type Database = {
         }
         Relationships: []
       }
-      "eglise_OLCAP-CI_message": {
-        Row: {
-          appointment_date: string | null
-          company: string | null
-          contact_type: string | null
-          created_at: string
-          email: string | null
-          id: string
-          message: string
-          name: string
-          phone: string | null
-          preferred_contact: string | null
-          status: string | null
-          subject: string | null
-        }
-        Insert: {
-          appointment_date?: string | null
-          company?: string | null
-          contact_type?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          message: string
-          name: string
-          phone?: string | null
-          preferred_contact?: string | null
-          status?: string | null
-          subject?: string | null
-        }
-        Update: {
-          appointment_date?: string | null
-          company?: string | null
-          contact_type?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          message?: string
-          name?: string
-          phone?: string | null
-          preferred_contact?: string | null
-          status?: string | null
-          subject?: string | null
-        }
-        Relationships: []
-      }
       eglise_participants_secure: {
         Row: {
           created_at: string | null
@@ -755,6 +710,51 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      "OLCAP-CI_message": {
+        Row: {
+          appointment_date: string | null
+          company: string | null
+          contact_type: string | null
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          name: string
+          phone: string | null
+          preferred_contact: string | null
+          status: string | null
+          subject: string | null
+        }
+        Insert: {
+          appointment_date?: string | null
+          company?: string | null
+          contact_type?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          name: string
+          phone?: string | null
+          preferred_contact?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Update: {
+          appointment_date?: string | null
+          company?: string | null
+          contact_type?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          preferred_contact?: string | null
+          status?: string | null
+          subject?: string | null
         }
         Relationships: []
       }
