@@ -122,6 +122,39 @@ export type Database = {
         }
         Relationships: []
       }
+      eglise_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          church_id: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          church_id?: string | null
+          created_at?: string
+          full_name?: string
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          church_id?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ie_announcements: {
         Row: {
           author_id: string | null
