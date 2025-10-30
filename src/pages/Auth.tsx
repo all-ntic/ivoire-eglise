@@ -197,11 +197,17 @@ export default function Auth() {
                         <SelectValue placeholder="Sélectionnez une église" />
                       </SelectTrigger>
                       <SelectContent>
-                        {churches.map((church) => (
-                          <SelectItem key={church.id} value={church.id}>
-                            {church.name}
-                          </SelectItem>
-                        ))}
+                        {churches.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Aucune église disponible. Demandez à votre pasteur de s'inscrire d'abord.
+                          </div>
+                        ) : (
+                          churches.map((church) => (
+                            <SelectItem key={church.id} value={church.id}>
+                              {church.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
