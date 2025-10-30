@@ -55,7 +55,12 @@ serve(async (req) => {
       email_confirm: true, // Auto-confirmer l'email pour simplifier
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      if (authError.message.includes("already been registered")) {
+        throw new Error("Un compte avec cet email existe déjà. Veuillez vous connecter ou utiliser un autre email.");
+      }
+      throw authError;
+    }
     if (!authData.user) throw new Error("Erreur lors de la création du compte");
 
     const userId = authData.user.id;
