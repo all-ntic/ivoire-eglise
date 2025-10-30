@@ -575,6 +575,14 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      create_church_with_pastor: {
+        Args: {
+          p_church_name: string
+          p_church_slug: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_user_church: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

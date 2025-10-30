@@ -171,31 +171,16 @@ export default function Auth() {
             throw new Error("Erreur lors de la création du profil. Veuillez réessayer.");
           }
 
-          // If pastor, create church and assign admin role
+          // If pastor, create church and assign admin role using secure function
           if (userType === "pastor" && validated.churchName) {
             const slug = validated.churchName.toLowerCase().replace(/\s+/g, "-");
-            const { data: newChurch, error: churchError } = await supabase
-              .from("eglise_churches")
-              .insert({ name: validated.churchName, slug })
-              .select()
-              .single();
+            const { data, error: churchError } = await supabase.rpc("create_church_with_pastor", {
+              p_church_name: validated.churchName,
+              p_church_slug: slug,
+              p_user_id: authData.user.id,
+            });
 
             if (churchError) throw churchError;
-
-            // Update profile with church_id
-            const { error: profileError } = await supabase
-              .from("eglise_profiles")
-              .update({ church_id: newChurch.id })
-              .eq("id", authData.user.id);
-
-            if (profileError) throw profileError;
-
-            // Assign admin role
-            const { error: roleError } = await supabase
-              .from("eglise_user_roles")
-              .insert({ user_id: authData.user.id, role: "admin" });
-
-            if (roleError) throw roleError;
           } else if (validated.selectedChurchId) {
             // If member, just update profile with selected church
             const { error: profileError } = await supabase
