@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          announcement_type: string
+          author_id: string
+          church_id: string
+          content: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          announcement_type: string
+          author_id: string
+          church_id: string
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          announcement_type?: string
+          author_id?: string
+          church_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       churches: {
         Row: {
           created_at: string
@@ -32,6 +73,209 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          church_id: string
+          created_at: string
+          currency: string
+          donation_type: string
+          donor_email: string | null
+          donor_name: string
+          donor_phone: string
+          id: string
+          notes: string | null
+          payment_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          church_id: string
+          created_at?: string
+          currency?: string
+          donation_type: string
+          donor_email?: string | null
+          donor_name: string
+          donor_phone: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          church_id?: string
+          created_at?: string
+          currency?: string
+          donation_type?: string
+          donor_email?: string | null
+          donor_name?: string
+          donor_phone?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          church_id: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          event_type: string
+          id: string
+          location: string | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type: string
+          id?: string
+          location?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          location?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_messages: {
+        Row: {
+          church_id: string
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          address: string | null
+          church_id: string
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          membership_status: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          church_id: string
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          membership_status?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          church_id?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          membership_status?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          receiver_id?: string
+          sender_id?: string
         }
         Relationships: []
       }
@@ -96,6 +340,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_church_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
