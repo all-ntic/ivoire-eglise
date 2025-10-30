@@ -172,6 +172,7 @@ export type Database = {
           category: string | null
           content: string
           created_at: string
+          embedding: string | null
           id: string
           priority: number | null
           tags: string[] | null
@@ -182,6 +183,7 @@ export type Database = {
           category?: string | null
           content: string
           created_at?: string
+          embedding?: string | null
           id?: string
           priority?: number | null
           tags?: string[] | null
@@ -192,6 +194,7 @@ export type Database = {
           category?: string | null
           content?: string
           created_at?: string
+          embedding?: string | null
           id?: string
           priority?: number | null
           tags?: string[] | null
