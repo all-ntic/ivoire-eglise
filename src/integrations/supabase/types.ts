@@ -135,6 +135,7 @@ export type Database = {
           name: string
           pastor_name: string | null
           phone: string | null
+          slug: string | null
           updated_at: string
           website: string | null
         }
@@ -150,6 +151,7 @@ export type Database = {
           name: string
           pastor_name?: string | null
           phone?: string | null
+          slug?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -165,6 +167,7 @@ export type Database = {
           name?: string
           pastor_name?: string | null
           phone?: string | null
+          slug?: string | null
           updated_at?: string
           website?: string | null
         }
