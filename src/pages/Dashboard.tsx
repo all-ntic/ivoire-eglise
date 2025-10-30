@@ -21,7 +21,6 @@ import {
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,22 +42,6 @@ export default function Dashboard() {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
-
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-    }
-  }, [user]);
-
-  const loadProfile = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("eglise_profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    setProfile(data);
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -109,7 +92,7 @@ export default function Dashboard() {
           <div>
             <h1 className="text-2xl font-bold text-primary">IVOIRE ÉGLISE+</h1>
             <p className="text-sm text-muted-foreground">
-              Bienvenue, {profile?.full_name || user.email}
+              Bienvenue, {user.email}
             </p>
           </div>
           <div className="flex gap-2">
