@@ -98,56 +98,32 @@ export default function Auth() {
           return;
         }
 
-        // Inscription de l'utilisateur
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+        // Appeler l'edge function pour l'inscription
+        const { data, error } = await supabase.functions.invoke("register-user", {
+          body: {
+            email,
+            password,
+            fullName,
+            userType,
+            churchName: userType === "pastor" ? churchName : undefined,
+            churchId: userType === "member" ? selectedChurch : undefined,
           },
         });
-        
-        if (authError) throw authError;
-        if (!authData.user) throw new Error("Erreur lors de la création du compte");
 
-        let churchId = selectedChurch;
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
 
-        // Si c'est un pasteur, créer l'église
-        if (userType === "pastor") {
-          const { data: churchData, error: churchError } = await supabase
-            .from("churches")
-            .insert({ name: churchName.trim() })
-            .select()
-            .single();
+        // Connecter l'utilisateur
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-          if (churchError) throw churchError;
-          churchId = churchData.id;
-        }
-
-        // Créer le profil
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert({
-            user_id: authData.user.id,
-            full_name: fullName.trim(),
-            church_id: churchId,
-          });
-
-        if (profileError) throw profileError;
-
-        // Assigner le rôle
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({
-            user_id: authData.user.id,
-            role: userType,
-          });
-
-        if (roleError) throw roleError;
+        if (signInError) throw signInError;
 
         toast({
           title: "Inscription réussie !",
-          description: "Vérifiez votre email pour confirmer votre compte.",
+          description: "Bienvenue sur IVOIRE ÉGLISE+ !",
         });
       }
     } catch (error: any) {
